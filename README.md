@@ -4,6 +4,9 @@ A reusable fantasy football draft board. Search players, build a favorites queue
 mark your own picks **Drafted** and other teams' picks **Gone**, and always see who's
 left. State is saved in the browser, so you can close the tab and resume mid-draft.
 
+Responsive: a dense multi-column list on desktop, a stacked two-line layout with
+large tap targets on phones. Light and dark themes follow the device.
+
 ## Run locally
 
 ```bash

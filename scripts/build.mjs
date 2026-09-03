@@ -83,15 +83,38 @@ if (!re.test(src)) {
   console.error('Could not find <script id="player-data"> block in index.html');
   process.exit(1);
 }
-const builtHtml = src.replace(re, `$1\n${json}\n$2`);
+const embedded = src.replace(re, `$1\n${json}\n$2`);
 
-// Keep the working copy (root) in sync so `file://` / `npm start` stay current...
-writeFileSync(HTML, builtHtml);
+// The root index.html is the source/fragment (also published as an Artifact, which
+// wraps it in its own <head> and reads the <title> from it). Keep its data current.
+writeFileSync(HTML, embedded);
 writeFileSync(JSON_OUT, json + "\n");
 
-// ...and emit the static site Vercel serves.
+// public/ is the deployable static site: a complete, mobile-ready HTML document.
+// Lift <title> into <head>; everything else becomes the <body>.
+const titleMatch = embedded.match(/<title>([\s\S]*?)<\/title>\s*/i);
+const pageTitle = titleMatch ? titleMatch[1].trim() : "Draft Room Board";
+const bodyHtml = titleMatch ? embedded.replace(titleMatch[0], "") : embedded;
+
+const page = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${pageTitle}</title>
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Fantasy football draft board — search players, favorite targets, and track who's been drafted.">
+<meta name="theme-color" content="#eceee7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0c1210" media="(prefers-color-scheme: dark)">
+</head>
+<body>
+${bodyHtml}
+</body>
+</html>
+`;
+
 mkdirSync(PUBLIC, { recursive: true });
-writeFileSync(join(PUBLIC, "index.html"), builtHtml);
+writeFileSync(join(PUBLIC, "index.html"), page);
 writeFileSync(join(PUBLIC, "players.json"), json + "\n");
 
 const byPos = players.reduce((m, p) => ((m[p.pos] = (m[p.pos] || 0) + 1), m), {});

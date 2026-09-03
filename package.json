@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "start": "python3 -m http.server 8080",
-    "dev": "python3 -m http.server 8080"
+    "start": "node scripts/build.mjs && python3 -m http.server 8080 --directory public",
+    "dev": "npm start"
   },
   "license": "MIT"
 }

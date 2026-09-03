@@ -90,7 +90,10 @@
     font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     line-height: 1.4;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
   }
+  button { touch-action: manipulation; }
 
   .wrap { max-width: 940px; margin: 0 auto; padding: 0 16px 120px; }
 
@@ -164,7 +167,7 @@
   .search input {
     width: 100%;
     font: inherit;
-    font-size: 0.95rem;
+    font-size: 1rem; /* >= 16px keeps iOS Safari from zooming on focus */
     padding: 9px 32px 9px 34px;
     border-radius: 9px;
     border: 1px solid var(--line);
@@ -322,18 +325,19 @@
 
   .row {
     display: grid;
-    grid-template-columns: 42px 1fr auto;
+    grid-template-columns: 40px minmax(0, 1fr) auto auto;
     align-items: center;
-    gap: 12px;
-    padding: 9px 10px 9px 0;
+    column-gap: 10px;
+    padding: 9px 10px 9px 12px;
     border-bottom: 1px solid var(--line-soft);
     position: relative;
     border-left: 3px solid var(--pc, transparent);
-    padding-left: 12px;
     border-radius: 2px;
     transition: opacity .18s ease, background .18s ease;
   }
-  .row:hover { background: var(--panel-2); }
+  @media (hover: hover) {
+    .row:hover { background: var(--panel-2); }
+  }
 
   .rank {
     font-family: "Spline Sans Mono", monospace;
@@ -350,12 +354,16 @@
     font-weight: 600;
     font-size: 1.02rem;
     letter-spacing: -0.01em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     display: flex;
     align-items: center;
     gap: 7px;
+    min-width: 0;
+  }
+  .name .nm {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
   }
   .name .flag {
     font-family: "Oswald", sans-serif;
@@ -405,7 +413,9 @@
     display: inline-flex; align-items: center; justify-content: center;
     line-height: 0;
     flex: 0 0 auto;
+    touch-action: manipulation;
   }
+  .star-slot { display: block; width: 34px; height: 34px; }
   .star:hover { border-color: var(--accent); color: var(--accent); }
   .star[aria-pressed="true"] {
     background: color-mix(in srgb, var(--accent) 16%, var(--panel));
@@ -427,8 +437,11 @@
     cursor: pointer;
     white-space: nowrap;
     flex: 0 0 auto;
+    touch-action: manipulation;
   }
-  .act:hover { border-color: var(--muted); color: var(--ink); }
+  @media (hover: hover) {
+    .act:hover { border-color: var(--muted); color: var(--ink); }
+  }
   .act.act-drafted[aria-pressed="true"] {
     background: var(--good); border-color: var(--good); color: var(--btn-on);
   }
@@ -441,7 +454,7 @@
   .act:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   .row.is-gone { opacity: 0.5; }
-  .row.is-gone .name > span:first-child { text-decoration: line-through; text-decoration-thickness: 1px; }
+  .row.is-gone .name .nm { text-decoration: line-through; text-decoration-thickness: 1px; }
   .row.is-mine { background: color-mix(in srgb, var(--good) 7%, transparent); }
 
   .empty {
@@ -561,16 +574,87 @@
     padding: 1px 5px;
   }
 
-  @media (max-width: 560px) {
-    .row { grid-template-columns: 36px 1fr auto; gap: 8px; padding-left: 10px; }
-    .name { font-size: 0.96rem; }
-    .act { padding: 8px 9px; font-size: 0.72rem; }
-    .star { width: 32px; height: 32px; }
-    .wordmark { font-size: 1rem; }
+  /* Tap feedback (fine for touch and mouse; disabled under reduced motion) */
+  .act:active, .star:active, .pos-tab:active,
+  .toggle:active, .btn-ghost:active, .toast button:active,
+  .modal .danger:active { transform: scale(0.97); }
+
+  /* ---------- Phones ---------- */
+  @media (max-width: 600px) {
+    .wrap { padding: 0 12px 96px; }
+
+    .bar { padding: 10px 12px 8px; }
+    .wordmark { font-size: 0.98rem; letter-spacing: 0.04em; }
+    .wordmark .dot { width: 8px; height: 8px; }
+    .progress-lead { font-size: 0.72rem; }
+    .progress-lead .sep { margin: 0 4px; }
+
+    .controls { margin-top: 9px; gap: 7px; }
+    .search { flex: 1 1 100%; }
+    #showTaken { flex: 1 1 auto; justify-content: center; }
+    #resetBtn { flex: 0 0 auto; }
+
+    .posfilter { padding: 9px 12px 10px; }
+    .pos-tab { padding: 7px 13px; }
+
+    .section { margin-top: 22px; }
+    .section-head h2 { font-size: 0.96rem; }
+    .section-head .meta { font-size: 0.72rem; }
+
+    footer { margin-top: 28px; padding: 14px 12px; }
+    footer .foot-kbd { display: none; }
+
+    /* Two-line row: rank + name + star up top, full-width actions below */
+    .row {
+      grid-template-columns: 30px minmax(0, 1fr) 40px;
+      grid-template-areas:
+        "rank who  star"
+        "act  act  act";
+      column-gap: 10px;
+      row-gap: 9px;
+      padding: 11px 10px 11px 12px;
+    }
+    .row .rank    { grid-area: rank; }
+    .row .who     { grid-area: who; }
+    .row .star,
+    .row .star-slot { grid-area: star; justify-self: end; }
+    .row .actions { grid-area: act; gap: 8px; }
+
+    .row .actions .act {
+      flex: 1;
+      min-height: 42px;
+      padding: 0 10px;
+      font-size: 0.82rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .row .star { width: 38px; height: 38px; }
+    .row .star-slot { width: 38px; height: 38px; }
+
+    .name { font-size: 1rem; }
+    .rank { font-size: 0.92rem; }
+    .rank small { font-size: 0.56rem; }
+    .sub { font-size: 0.75rem; }
+
+    .toast {
+      left: 12px; right: 12px; bottom: 12px;
+      transform: translateY(20px);
+      max-width: none;
+      justify-content: space-between;
+    }
+    .toast.show { transform: translateY(0); }
+  }
+
+  @media (max-width: 380px) {
+    .modal-actions { flex-direction: column; }
+    .modal-actions button { width: 100%; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; }
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+    .act:active, .star:active, .pos-tab:active,
+    .toggle:active, .btn-ghost:active { transform: none; }
   }
 </style>
 
@@ -579,8 +663,8 @@
     <div class="titlerow">
       <div class="wordmark"><span class="dot"></span> Draft Room Board</div>
       <div class="progress-lead">
-        <b id="statTaken">0</b> of <span id="statTotal">0</span> off the board
-        <span class="sep">·</span><b id="statMine">0</b> my team
+        <b id="statTaken">0</b>/<span id="statTotal">0</span> off the board
+        <span class="sep">·</span><b id="statMine">0</b> mine
         <span class="sep">·</span><b id="statGone">0</b> gone
       </div>
     </div>
@@ -626,7 +710,7 @@
 
 <footer>
   <span>Rankings: composite average across multiple expert sources. Tiers are positional.</span>
-  <span>Press <kbd>/</kbd> to search · saved in this browser</span>
+  <span><span class="foot-kbd">Press <kbd>/</kbd> to search · </span>Saved in this browser.</span>
 </footer>
 
 <script id="player-data" type="application/json">
@@ -803,21 +887,21 @@
     var rankTxt = Number.isInteger(p.rank) ? p.rank : p.rank.toFixed(1);
     var flag = st === "drafted" ? '<span class="flag f-mine">My team</span>'
       : st === "gone" ? '<span class="flag f-gone">Gone</span>' : "";
-    var starBtn = st ? "" :
+    var starBtn = st ? '<span class="star-slot" aria-hidden="true"></span>' :
       '<button class="star" aria-pressed="' + (state.fav[p.id] ? "true" : "false") +
       '" title="Favorite" aria-label="Favorite ' + esc(p.name) + '">' + starSvg() + '</button>';
 
     li.innerHTML =
       '<div class="rank">' + rankTxt + '<small>AVG</small></div>' +
       '<div class="who">' +
-        '<div class="name"><span>' + esc(p.name) + '</span>' + flag + '</div>' +
+        '<div class="name"><span class="nm">' + esc(p.name) + '</span>' + flag + '</div>' +
         '<div class="sub">' +
           '<span class="pos-chip">' + p.pos + '</span>' +
           '<span>' + esc(p.team) + '</span>' +
           '<span>&middot; Tier ' + p.tier + '</span>' +
         '</div>' +
-      '</div>' +
-      '<div class="actions">' + starBtn +
+      '</div>' + starBtn +
+      '<div class="actions">' +
         '<button class="act act-drafted" aria-pressed="' + (st === "drafted" ? "true" : "false") + '">Drafted</button>' +
         '<button class="act act-gone" aria-pressed="' + (st === "gone" ? "true" : "false") + '">Gone</button>' +
       '</div>';
@@ -835,6 +919,7 @@
 
   function renderPosFilter() {
     var el = document.getElementById("posFilter");
+    var selectedTab = null;
     el.innerHTML = "";
     var tabs = [{ key: "ALL", label: "All", count: PLAYERS.length - countStatus("drafted") - countStatus("gone") }];
     POS_ORDER.forEach(function (pos) {
@@ -854,12 +939,22 @@
       var b = document.createElement("button");
       b.className = "pos-tab";
       b.setAttribute("role", "tab");
-      b.setAttribute("aria-selected", String(state.filter === t.key));
+      var selected = state.filter === t.key;
+      b.setAttribute("aria-selected", String(selected));
       if (t.color) b.style.setProperty("--tabcolor", t.color);
       b.innerHTML = t.label + ' <span class="cnt">' + t.count + '</span>';
       b.addEventListener("click", function () { state.filter = t.key; save(); render(); });
       el.appendChild(b);
+      if (selected) selectedTab = b;
     });
+
+    // Keep the active filter visible in the scrollable rail (esp. on mobile).
+    if (selectedTab) {
+      var cont = el.getBoundingClientRect();
+      var tab = selectedTab.getBoundingClientRect();
+      if (tab.left < cont.left + 14) el.scrollLeft += tab.left - cont.left - 14;
+      else if (tab.right > cont.right - 14) el.scrollLeft += tab.right - cont.right + 14;
+    }
   }
 
   // ---------- actions ----------
