@@ -8,7 +8,7 @@
  *
  * Drop a new compiled_rankings.csv with the same columns each season and re-run.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -16,6 +16,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CSV = join(root, "compiled_rankings.csv");
 const HTML = join(root, "index.html");
 const JSON_OUT = join(root, "players.json");
+const PUBLIC = join(root, "public"); // static deploy output (Vercel outputDirectory)
 
 const EXPECTED_HEADER = ["Position", "Name", "Team", "CompositeAvgRank", "PositionTier", "SourceCount"];
 
@@ -76,16 +77,23 @@ const players = lines.map((cols, idx) => {
 
 const json = JSON.stringify(players);
 
-writeFileSync(JSON_OUT, json + "\n");
-
-const html = readFileSync(HTML, "utf8");
+const src = readFileSync(HTML, "utf8");
 const re = /(<script id="player-data" type="application\/json">)[\s\S]*?(<\/script>)/;
-if (!re.test(html)) {
+if (!re.test(src)) {
   console.error('Could not find <script id="player-data"> block in index.html');
   process.exit(1);
 }
-writeFileSync(HTML, html.replace(re, `$1\n${json}\n$2`));
+const builtHtml = src.replace(re, `$1\n${json}\n$2`);
+
+// Keep the working copy (root) in sync so `file://` / `npm start` stay current...
+writeFileSync(HTML, builtHtml);
+writeFileSync(JSON_OUT, json + "\n");
+
+// ...and emit the static site Vercel serves.
+mkdirSync(PUBLIC, { recursive: true });
+writeFileSync(join(PUBLIC, "index.html"), builtHtml);
+writeFileSync(join(PUBLIC, "players.json"), json + "\n");
 
 const byPos = players.reduce((m, p) => ((m[p.pos] = (m[p.pos] || 0) + 1), m), {});
-console.log(`Embedded ${players.length} players into index.html`);
+console.log(`Embedded ${players.length} players → index.html and public/`);
 console.log(Object.entries(byPos).map(([k, v]) => `  ${k}: ${v}`).join("\n"));

@@ -15,9 +15,16 @@ Or just open `index.html` in a browser (note: browsers disable `localStorage` fo
 
 ## Deploy
 
-It's a single self-contained static file. Push `index.html` (plus its siblings) to any
-static host — Netlify, Vercel, GitHub Pages, Cloudflare Pages, S3, etc. No build step
-or server is required to serve it.
+`npm run build` writes the deployable static site to `public/` (`index.html` +
+`players.json`). Point any static host at that directory.
+
+**Vercel** — `vercel.json` is committed and already sets this up (`buildCommand:
+npm run build`, `outputDirectory: public`). Just import the repo; no dashboard config
+needed.
+
+**Anything else** (Netlify, GitHub Pages, Cloudflare Pages, S3, plain nginx) — run
+`npm run build` and upload the `public/` folder, or upload the repo-root `index.html`
+directly since it carries the same embedded data.
 
 Saved drafts live in `localStorage`, which is per-browser and per-domain — a draft on
 your laptop won't sync to your phone, and each deploy origin has its own storage.
@@ -34,8 +41,8 @@ The player data is embedded directly in `index.html`. To refresh it:
    npm run build
    ```
 
-This re-parses the CSV, rewrites `players.json`, and re-embeds the data into
-`index.html`.
+This re-parses the CSV, rewrites `players.json`, re-embeds the data into `index.html`,
+and refreshes `public/`.
 
 ## Files
 
@@ -44,4 +51,6 @@ This re-parses the CSV, rewrites `players.json`, and re-embeds the data into
 | `index.html` | The entire app — markup, styles, logic, and embedded player data |
 | `compiled_rankings.csv` | Source rankings (composite average across expert sources) |
 | `players.json` | Generated dataset (also embedded in `index.html`) |
-| `scripts/build.mjs` | Regenerates `players.json` and the embedded data from the CSV |
+| `scripts/build.mjs` | Regenerates `players.json`, the embedded data, and `public/` from the CSV |
+| `vercel.json` | Vercel build + output-directory config |
+| `public/` | Build output (git-ignored) |
