@@ -1,0 +1,13 @@
+{
+  "name": "alz-draft-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reusable fantasy football draft board — search, favorite, and mark players drafted or gone.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "python3 -m http.server 8080",
+    "dev": "python3 -m http.server 8080"
+  },
+  "license": "MIT"
+}
